@@ -43,26 +43,24 @@ rules = {'START': [-1,1,-1,1,1,1,1,-1,-1,1,-1,-1],'CN': [1,1,1,1,1,1,-1,1,1,1,-1
 keys = list(dic.keys())
 seg_index_list = []  # indexes of Sentence-separated word
 word = []   # Sentence-separated word
-sortedWord = []   
-temp = ''    # temporary index of Sentence-separated word
+lastWordIndex = -1
+indexesG = -1  # Current index value of sorted index
 prePOS = ''
 result = ''    # Final Results
 
 
 # If a word has multiple POS
-def WordPOSTraversal(indexes, words):
-  global prePOS
-  print(words)
+def WordPOSTraversal(words):
+  global prePOS  
   # words = word[loopIndex][indexes]
-  wordMatrix = dic[words]
-  print(wordMatrix)
+  wordMatrix = dic[words[indexesG]]
   if len(wordMatrix) == 12:
-    CompMatrices(wordMatrix,words, indexes)
+    CompMatrices(wordMatrix,words)
   else:
     for target_list in wordMatrix:
-      return CompMatrices(target_list, words, indexes)
+      return CompMatrices(target_list, words)
 
-def CompMatrices(wordMatrix, words, indexes):
+def CompMatrices(wordMatrix, words):
   global prePOS
   global result
   wordMatrix = np.array(wordMatrix)
@@ -70,33 +68,37 @@ def CompMatrices(wordMatrix, words, indexes):
   truth = (wordMatrix == prePOSMatrix).any()
   posStr = ','.join([str(x) for x in wordMatrix])
   prePOS = POS[posStr]
-  if truth:
-    CompMatrices(wordMatrix, words, indexes)
-    result = result + '\\' + words
-  # print(result)
+  # print(lastWordIndex != indexesG)
   # print(prePOS)
+  if truth:       # If POS is satisfied and the last word is not reached 
+    # CompMatrices(wordMatrix, words)
+    # print(indexesG)
+    result = result + '\\' + words[indexesG]
+  print(result)
 
 def DicTraversal(seg_index_list):
  global prePOS
- global temp
+ global indexesG
  for indexes in seg_index_list:
-    if temp != indexes:
+    if indexesG != indexes:
       for i in range(0,len(word)):
-        temp = indexes        # Remove duplicate calls
-        if word[i].__contains__(indexes):
-          if indexes == 0:
+        indexesG = indexes        # Remove duplicate calls
+        print(indexesG)
+        if word[i].__contains__(indexesG):
+          if indexesG == 0:
             prePOS = 'START'
-          WordPOSTraversal(indexes, word[i])   #////
-        # print(i)
+          WordPOSTraversal(word[i])   #////
 
 # search word in dic & sort word of sentense
 def SearchDic():
+  global lastWordIndex
   for i in range(0,len(keys)):
     wordIndex = sentense.find(keys[i])
     if wordIndex != -1 or wordIndex != '-1':
       seg_index_list.append(wordIndex)
       word.append({wordIndex : sentense[wordIndex : wordIndex + len(keys[i])]})
   seg_index_list.sort()# sort word index
+  lastWordIndex = seg_index_list[len(seg_index_list) - 1]
   DicTraversal(seg_index_list)
 
     
