@@ -45,6 +45,7 @@ seg_index_list = []  # indexes of Sentence-separated word
 word = []   # Sentence-separated word
 lastWordIndex = -1
 indexesG = -1  # Current index value of sorted index
+group = []
 prePOS = ''
 result = ''    # Final Results
 
@@ -73,24 +74,46 @@ def CompMatrices(wordMatrix, words):
   if truth:       # If POS is satisfied and the last word is not reached 
     # CompMatrices(wordMatrix, words)
     # print(indexesG)
-    result = result + '\\' + words[indexesG]
-  print(result)
+    result = result + '\\' + words[indexesG] + prePOS
 
 def DicTraversal(seg_index_list):
  global prePOS
  global indexesG
+ global group
  for indexes in seg_index_list:
     if indexesG != indexes:
       for i in range(0,len(word)):
         indexesG = indexes        # Remove duplicate calls
-        print(indexesG)
         if word[i].__contains__(indexesG):
           if indexesG == 0:
             prePOS = 'START'
           WordPOSTraversal(word[i])   #////
 
+# Split the same index into array
+def group_by_element(lst):
+    index = []
+    for i, _ in enumerate(lst):
+        if i < len(lst) - 1 and lst[i + 1] != lst[i]:
+            index.append(i + 1)
+
+    def take(lst, n):
+        for i in range(n):
+            yield next(lst)
+
+    if not hasattr(lst, 'next'):
+        lst = iter(lst)
+
+    begin = 0
+    for item in index:
+        x = list(take(lst, item - begin ))
+        begin = item
+        yield x
+
+    yield list(lst)
+    
 # search word in dic & sort word of sentense
 def SearchDic():
+  global group
   global lastWordIndex
   for i in range(0,len(keys)):
     wordIndex = sentense.find(keys[i])
@@ -98,8 +121,9 @@ def SearchDic():
       seg_index_list.append(wordIndex)
       word.append({wordIndex : sentense[wordIndex : wordIndex + len(keys[i])]})
   seg_index_list.sort()# sort word index
+  group = group_by_element(seg_index_list)
   lastWordIndex = seg_index_list[len(seg_index_list) - 1]
   DicTraversal(seg_index_list)
+  print(result)
 
-    
 SearchDic()
